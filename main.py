@@ -5,6 +5,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from schemas import PostCreate, PostResponse
+
 app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -48,12 +50,28 @@ def get_post_html(request: Request, post_id: int):
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
 
 
-@app.get("/api/posts")
+@app.get("/api/posts", response_model=list[PostResponse])
 def get_posts():
     return posts
 
 
-@app.get("/api/post/{post_id}")
+@app.post(
+    "/api/posts", response_model=PostResponse, status_code=status.HTTP_201_CREATED
+)
+def create_post(post: PostCreate):
+    new_id = max(p["id"] for p in posts) + 1 if posts else 1
+    new_post = {
+        "id": new_id,
+        "author": post.author,
+        "title": post.title,
+        "content": post.content,
+        "date_posted": "April 01, 2026",
+    }
+    posts.append(new_post)
+    return new_post
+
+
+@app.get("/api/post/{post_id}", response_model=list[PostResponse])
 def get_post(post_id: int):
     for post in posts:
         if post.get("id") == post_id:
