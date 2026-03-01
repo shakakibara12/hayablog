@@ -13,7 +13,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
-posts = [
+posts: list[dict[str, int | str]] = [
     {
         "id": 1,
         "author": "John Doe",
@@ -59,7 +59,7 @@ def get_posts():
     "/api/posts", response_model=PostResponse, status_code=status.HTTP_201_CREATED
 )
 def create_post(post: PostCreate):
-    new_id = max(p["id"] for p in posts) + 1 if posts else 1
+    new_id = max(int(p["id"]) for p in posts) + 1 if posts else 1
     new_post = {
         "id": new_id,
         "author": post.author,
@@ -71,7 +71,7 @@ def create_post(post: PostCreate):
     return new_post
 
 
-@app.get("/api/post/{post_id}", response_model=list[PostResponse])
+@app.get("/api/post/{post_id}", response_model=PostResponse)
 def get_post(post_id: int):
     for post in posts:
         if post.get("id") == post_id:
